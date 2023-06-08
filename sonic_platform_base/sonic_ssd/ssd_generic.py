@@ -35,6 +35,11 @@ class SsdUtil(SsdBase):
     health = NOT_AVAILABLE
     ssd_info = NOT_AVAILABLE
     vendor_ssd_info = NOT_AVAILABLE
+    program_fail_count = NOT_AVAILABLE
+    erase_fail_count = NOT_AVAILABLE
+    uncorrectable_error_count = NOT_AVAILABLE
+    lba_written = NOT_AVAILABLE
+    lba_read = NOT_AVAILABLE
 
     def __init__(self, diskdev):
         self.vendor_ssd_utility = {
@@ -153,7 +158,12 @@ class SsdUtil(SsdBase):
                     self.health = float(self._parse_re('Remaining_Life_Left\s*\d*\s*(\d+?)\s+', self.vendor_ssd_info))
                 except ValueError:
                     pass
-        
+            self.program_fail_count = self._parse_re('Total_Program_Fail\s*\d*\s*(\d+?)\s+', self.vendor_ssd_info)
+            self.erase_fail_count = self._parse_re('Total_Erase_Fail\s*\d*\s*(\d+?)\s+', self.vendor_ssd_info)
+            self.uncorrectable_error_count = self._parse_re('Uncorrectable_Error_Count\s*\d*\s*(\d+?)\s+', self.vendor_ssd_info)
+            self.lba_written = self._parse_re('Total_LBAs_Written\s*\d*\s*(\d+?)\s+', self.vendor_ssd_info)
+            self.lba_read = self._parse_re('Total_LBAs_Read\s*\d*\s*(\d+?)\s+', self.vendor_ssd_info)
+
     def fetch_vendor_ssd_info(self, diskdev, model):
         self.vendor_ssd_info = self._execute_shell(self.vendor_ssd_utility[model]["utility"].format(diskdev))
 
@@ -218,3 +228,48 @@ class SsdUtil(SsdBase):
 
     def parse_id_number(self, id):
         return self._parse_re('{}\s*(.+?)\n'.format(id), self.ssd_info)
+
+    def get_program_fail_count(self):
+        """
+        Retrieves program fail counter for the given disk device
+
+        Returns:
+            int: number > 0, N/A if not valid
+        """
+        return self.program_fail_count
+
+    def get_erase_fail_count(self):
+        """
+        Retrieves erase fail counter for the given disk device
+
+        Returns:
+            int: number > 0, N/A if not valid
+        """
+        return self.erase_fail_count
+
+    def get_uncorrectable_error_count(self):
+        """
+        Retrieves uncorrectable error counter for the given disk device
+
+        Returns:
+            int: number > 0, N/A if not valid
+        """
+        return self.uncorrectable_error_count
+
+    def get_logical_block_address_written(self):
+        """
+        Retrieves total logical block addresses written for the given disk device
+
+        Returns:
+            int: number > 0, N/A if not valid
+        """
+        return self.lba_written
+
+    def get_logical_block_address_read(self):
+        """
+        Retrieves total logical block addresses read for the given disk device
+
+        Returns:
+            int: number > 0, N/A if not valid
+        """
+        return self.lba_read
